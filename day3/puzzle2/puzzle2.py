@@ -28,14 +28,14 @@ def recurse_helper(look_for, i, search_list):
             most_common_1.append(entry)
     if (look_for == "oxygen"):
         if len(most_common_0) > len(most_common_1):
-            return recurse_helper("oxygen", i + 1, most_common_0)
+            return recurse_helper(look_for, i + 1, most_common_0)
         else: # when the number of 1's is equal to or greater than the number of 0's
-            return recurse_helper("oxygen", i + 1, most_common_1)
+            return recurse_helper(look_for, i + 1, most_common_1)
     else: # else look for carbon
         if len(most_common_0) <= len(most_common_1):
-            return recurse_helper("carbon", i + 1, most_common_0)
+            return recurse_helper(look_for, i + 1, most_common_0)
         else: # else number of 0's must be greater than the number of 1's
-            return recurse_helper("carbon", i + 1, most_common_1)
+            return recurse_helper(look_for, i + 1, most_common_1)
     
 
 main()
