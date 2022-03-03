@@ -5,7 +5,7 @@ def main():
     bingo_numbers = list()
     bingo_sheets = list()
 
-    with open("input.txt") as file:
+    with open("test.txt") as file:
         current_bingo_sheet = {"rows": list(), "columns": list()}
         for line in file:
             line = line.strip()
@@ -40,14 +40,16 @@ def main():
                     bingo_sheets.append(current_bingo_sheet)
                     current_bingo_sheet = {"rows": list(), "columns": list()}
 
+    won_bingo_sheets = list()
     for bingo_number in bingo_numbers:
         for bingo_sheet in bingo_sheets:
+            if bingo_sheet in won_bingo_sheets:
+                continue # skip won bingo sheets
             bingo_rows = bingo_sheet["rows"]
             bingo_columns = bingo_sheet["columns"]
 
             if check_if_win(bingo_rows, bingo_number) or check_if_win(bingo_columns, bingo_number):
-                return
-
+               won_bingo_sheets.append(bingo_sheet)
 
 def check_if_win(list_of_lists, bingo_number):
     for alist in list_of_lists:
