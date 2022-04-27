@@ -12,10 +12,10 @@ def main():
                 current_line.append(int(char))
             octopus_map.append(current_line)
 
-    print(count_flashes(octopus_map, 200))
+    print(count_flashes(octopus_map))
 
 
-def count_flashes(octopus_map: list, max_steps) -> int:
+def count_flashes(octopus_map: list) -> int:
     current_step = 0
     while True:
         current_step += 1
