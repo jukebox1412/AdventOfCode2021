@@ -12,10 +12,10 @@ def main():
                 else:
                     split = line.split(" -> ")
                     rules[split[0]] = split[1]
-    for i in range(0, 40):
+    for i in range(0, 2):
         template = step(template, rules)
 
-    print(most_common_minus_least_common(template))
+    print((template))
 
 def most_common_minus_least_common(template: str) -> int:
     counts = dict()

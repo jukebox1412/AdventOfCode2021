@@ -1,80 +1,70 @@
-# https://adventofcode.com/2021/day/13
-
-from cv2 import magnitude
+# https://adventofcode.com/2021/day/14
 
 
-class Point:
-    def __init__(self, x: int, y: int):
-        self.x = x
-        self.y = y
-
-    def fold(self, magnitude: int, fold_along_x_axis: bool):
-        if not fold_along_x_axis:
-            if self.x < magnitude:
-                return  # no need for any further computation
-            distance_to_magnitude = self.x - magnitude
-            self.x -= distance_to_magnitude * 2
-        else:
-            if self.y < magnitude:
-                return  # no need for any further computation
-            distance_to_magnitude = self.y - magnitude
-            self.y -= distance_to_magnitude * 2
+from math import floor
 
 
-class Fold:
-    def __init__(self, magnitude: int, fold_along_x_axis: bool) -> None:
-        self.magnitude = magnitude
-        self.fold_along_x_axis = fold_along_x_axis
-
-
+MAX_CACHE_LENGTH = 16
 def main():
-    points = list[Point]()
-    folds = list[Fold]()
-    single_break = False
+    template = None
+    rules = dict()
     with open("test.txt") as file:
         for line in file:
             line = line.strip()
-            if not line:
-                single_break = True
-                continue
-
-            if not single_break:  # look for points
-                splits = line.split(',')
-                
-                x = int(splits[0])
-                y = int(splits[1])
-
-                points.append(Point(x, y))
-            else:  # look for folds
-                splits = line.split(' ')
-                
-                fold_along_x_axis = True
-                if splits[3][0] == 'x':
-                    fold_along_x_axis = False
-                
-                magnitude = int(splits[3][2])
-
-                folds.append(Fold(magnitude, fold_along_x_axis))
-
-    print(points)
-    print(folds)
-
-def print_sheet(points: list[Point]):
-    max_x = 0
-    max_y = 0
-    for point in points:
-        if point.x > max_x:
-            max_x = point.x
-        if point.y > max_y:
-            max_y = point.y
+            if line:
+                if not template:
+                    template = line
+                else:
+                    split = line.split(" -> ")
+                    rules[split[0]] = split[0][0] + split[1] + split[0][1]
+    cache = rules
     
-    for i in range(0, max_x):
-        print_str = ""
-        for j in range(0, max_y):
-            if any(point.x == i and point.y == j for point in points):
-                print_str += "#"
-            else:
-                print_str += "."
-        print(print_str)
+    for i in range(0, 2):
+        template = step(template, cache)
+
+    print(template)
+    for cached in cache:
+        print(f"[{cached}]:[{cache[cached]}]")
+
+def most_common_minus_least_common(template: str) -> int:
+    counts = dict()
+    for c in template:
+        if c not in counts:
+            counts[c] = 0
+        counts[c] += 1
+    most_common_count = 0
+    least_common_count = len(template)
+    for c in counts:
+        if counts[c] > most_common_count:
+            most_common_count = counts[c]
+        if counts[c] < least_common_count:
+            least_common_count = counts[c]
+    return most_common_count - least_common_count
+
+
+def step(template: str, cache: dict) -> str:
+    i = 0
+    original_template = template
+    while i < len(template) - 1:
+        for j in reversed(range(i + 1, min(len(template), i + MAX_CACHE_LENGTH))):
+            if template[i:j+1] in cache:
+                jump_ahead = len(cache[template[i:j+1]])
+                template = template[:i] + cache[template[i:j+1]] + template[j+1:]
+                i += jump_ahead - 2
+                break # break because reversed and we need to jump ahead
+        i += 1
+
+    # update the cache
+    for i in range(0, len(original_template) - 3): # minus 3 because we already have the len 2 combinations cached
+        for j in range(i + 3, min(i + MAX_CACHE_LENGTH, len(original_template))):
+            new_i = i + int((i + 1) / 2) 
+            new_j = j + int((j + 1) / 2)
+            cache[original_template[i:j]] = template[new_i:new_j + 1]
+
+            
+
+    return template
+            
+
 
 main()
