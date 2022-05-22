@@ -1,13 +1,9 @@
 # https://adventofcode.com/2021/day/14
 
-
-
-MAX_CACHE_LENGTH = 32
 def main():
     template = None
     rules = dict()
-    cache = dict()
-    with open("test.txt") as file:
+    with open("input.txt") as file:
         for line in file:
             line = line.strip()
             if line:
@@ -15,23 +11,49 @@ def main():
                     template = line
                 else:
                     split = line.split(" -> ")
-                    cache[split[0]] = split[0][0] + split[1] + split[0][1]
                     rules[split[0]] = split[1]
 
-    
+    current = dict()
+    for i in range(0, len(template) - 1):
+        pair = template[i] + template[i + 1]
+        if pair not in current:
+            current[pair] = 0
+        current[pair] += 1
+
     for i in range(0, 40):
-        template = step(template, cache)
+        next_current = dict()       
+        for pair in current:
+            new_pair_1 = pair[0] + rules[pair]
+            new_pair_2 = rules[pair] + pair[1]
+            
+            if new_pair_1 not in next_current:
+                next_current[new_pair_1] = 0
+            if new_pair_2 not in next_current:
+                next_current[new_pair_2] = 0
 
-    print(most_common_minus_least_common(template))
+            next_current[new_pair_1] += current[pair]
+            next_current[new_pair_2] += current[pair]
 
-def most_common_minus_least_common(template: str) -> int:
+        current = next_current
+
+    # for pair in current:
+    #     print(f"{pair}: {current[pair]}")
+    print(most_common_minus_least_common(next_current, template[-1]))
+
+
+def most_common_minus_least_common(current: dict, last_letter: str) -> int:
     counts = dict()
-    for c in template:
-        if c not in counts:
-            counts[c] = 0
-        counts[c] += 1
+    max_possible = 1
+    counts[last_letter] = 1
+    for pair in current:
+        c1 = pair[0]
+        if c1 not in counts:
+            counts[c1] = 0
+        counts[c1] += current[pair]
+        max_possible += current[pair]
+
     most_common_count = 0
-    least_common_count = len(template)
+    least_common_count = max_possible
     for c in counts:
         if counts[c] > most_common_count:
             most_common_count = counts[c]
@@ -40,27 +62,6 @@ def most_common_minus_least_common(template: str) -> int:
     return most_common_count - least_common_count
 
 
-def step(template: str, cache: dict) -> str:
-    i = 0
-    original_template = template
-    while i < len(template) - 1:
-        for j in reversed(range(i + 1, min(len(template), i + MAX_CACHE_LENGTH))):
-            if template[i:j+1] in cache:
-                jump_ahead = len(cache[template[i:j+1]])
-                template = template[:i] + cache[template[i:j+1]] + template[j+1:]
-                i += jump_ahead - 2
-                break # break because reversed and we need to jump ahead
-        i += 1
-
-    # update the cache
-    for i in range(0, len(original_template) - 3): # minus 3 because we already have the len 2 combinations cached
-        for j in range(i + 2, min(i + MAX_CACHE_LENGTH, len(original_template))):
-            new_i = i * 2
-            new_j = j * 2
-            cache[original_template[i:j+1]] = template[new_i:new_j + 1]
-
-    return template
-            
 
 
 main()
