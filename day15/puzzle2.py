@@ -1,67 +1,78 @@
-# https://adventofcode.com/2021/day/14
+# https://adventofcode.com/2021/day/15
 
 def main():
-    template = None
-    rules = dict()
+    map = list()
     with open("input.txt") as file:
         for line in file:
             line = line.strip()
-            if line:
-                if not template:
-                    template = line
-                else:
-                    split = line.split(" -> ")
-                    rules[split[0]] = split[1]
-
-    current = dict()
-    for i in range(0, len(template) - 1):
-        pair = template[i] + template[i + 1]
-        if pair not in current:
-            current[pair] = 0
-        current[pair] += 1
-
-    for i in range(0, 40):
-        next_current = dict()       
-        for pair in current:
-            new_pair_1 = pair[0] + rules[pair]
-            new_pair_2 = rules[pair] + pair[1]
-            
-            if new_pair_1 not in next_current:
-                next_current[new_pair_1] = 0
-            if new_pair_2 not in next_current:
-                next_current[new_pair_2] = 0
-
-            next_current[new_pair_1] += current[pair]
-            next_current[new_pair_2] += current[pair]
-
-        current = next_current
-
-    # for pair in current:
-    #     print(f"{pair}: {current[pair]}")
-    print(most_common_minus_least_common(next_current, template[-1]))
+            my_list = list()
+            for char in line:
+                my_list.append(int(char))
+            map.append(my_list)
+    print(dijkstras(map))
 
 
-def most_common_minus_least_common(current: dict, last_letter: str) -> int:
-    counts = dict()
-    max_possible = 1
-    counts[last_letter] = 1
-    for pair in current:
-        c1 = pair[0]
-        if c1 not in counts:
-            counts[c1] = 0
-        counts[c1] += current[pair]
-        max_possible += current[pair]
+def dijkstras(map: list[list]):
+    opened_list = set()
+    closed_list = set()
+    cost_to_visit = dict()
 
-    most_common_count = 0
-    least_common_count = max_possible
-    for c in counts:
-        if counts[c] > most_common_count:
-            most_common_count = counts[c]
-        if counts[c] < least_common_count:
-            least_common_count = counts[c]
-    return most_common_count - least_common_count
+    cost_to_visit[(0, 0)] = 0
+    opened_list.add((0, 0))
+
+    goal = (len(map) - 1, len(map[0]) - 1)
+
+    while len(opened_list) > 0:
+        next_visit = select_lowest_cost(opened_list, cost_to_visit)
+        opened_list.remove(next_visit)
+
+        allowed_directions = get_allowed_directions(map, next_visit)
+        for allowed_direction in allowed_directions:
+            cost_to_visit_allowed_direction = map[allowed_direction[0]
+                                                  ][allowed_direction[1]] + cost_to_visit[next_visit]
+            if allowed_direction == goal:  # found goal
+                return cost_to_visit_allowed_direction
 
 
+            if allowed_direction not in cost_to_visit:
+                cost_to_visit[allowed_direction] = cost_to_visit_allowed_direction
+
+            if cost_to_visit[allowed_direction] < cost_to_visit_allowed_direction:
+                continue
+
+            opened_list.add(allowed_direction)
+
+        closed_list.add(next_visit)
+
+
+def select_lowest_cost(opened_list: set, cost_to_visit: dict):
+    lowest_so_far = None
+    for location in opened_list:
+        if lowest_so_far is None:
+            lowest_so_far = location
+            continue
+        elif cost_to_visit[lowest_so_far] > cost_to_visit[location]:
+            lowest_so_far = location
+    return lowest_so_far
+
+
+def get_allowed_directions(map: list[list], current_location: tuple) -> list:
+    ret = list()
+    left = (current_location[0], current_location[1] - 1)
+    right = (current_location[0], current_location[1] + 1)
+    up = (current_location[0] - 1, current_location[1])
+    down = (current_location[0] + 1, current_location[1])
+
+    if current_location[1] != 0:
+        ret.append(left)
+    if current_location[1] < len(map[0]) - 1:
+        ret.append(right)
+    if current_location[0] != 0:
+        ret.append(up)
+    if current_location[0] < len(map) - 1:
+        ret.append(down)
+
+    return ret
 
 
 main()
