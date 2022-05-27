@@ -9,8 +9,35 @@ def main():
             for char in line:
                 my_list.append(int(char))
             map.append(my_list)
+    map = quintuple_map(map)
+    # print_map(map)
     print(dijkstras(map))
 
+def print_map(map: list[list]):
+    for i in range(0, len(map)):
+        row_str = ""
+        for j in range(0, len(map[0])):
+            row_str += str(map[i][j])
+        print(row_str)
+
+def quintuple_map(map: list[list]) -> list[list]:
+    new_map = list()
+    for i in range(0, 5):
+        for row in map:
+            new_row = list()
+            for j in range(0, 5):
+                for column in row:
+                    new_row.append(wrap_10(column + j + i))
+
+            new_map.append(new_row)
+        
+    return new_map
+
+def wrap_10(num: int) -> int:
+    if num < 10:
+        return num
+    else:
+        return num - 9
 
 def dijkstras(map: list[list]):
     opened_list = set()
