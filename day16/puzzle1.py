@@ -5,7 +5,7 @@ from typing import Tuple
 
 def main():
     hex = ""
-    with open("test6.txt") as file:
+    with open("input.txt") as file:
         for line in file:
             hex = line.strip()
             
@@ -29,32 +29,34 @@ def find_literal_hex_value(hex: str) -> Tuple[int, str]:
     
     return binary_to_number(binary_ret), hex[i:]
 
-def decode_packet(hex:str) -> Tuple[int, str]:
-    version = determine_version(hex)
-    type = determine_type(hex)
-    payload = hex[6:]
+def decode_packet(binary_str:str) -> Tuple[int, str]:
+    version = determine_version(binary_str)
+    type = determine_type(binary_str)
+    payload = binary_str[6:]
     
 
     if type == 4:
         literal_value, rest_of_hex = find_literal_hex_value(payload)
         return version, rest_of_hex
 
-    length_type = int(hex[6])
-    payload = hex[7:]
+    length_type = int(binary_str[6])
+    payload = binary_str[7:]
 
     total_subpacket_length = None
     number_of_subpackets = None
 
     if length_type == 0:
         total_subpacket_length = binary_to_number(payload[0:15])
-        payload = payload[16:]
+        payload = payload[15:]
     else:
         number_of_subpackets = binary_to_number(payload[0:11])
-        payload = payload[12:]
+        payload = payload[11:]
     
     sum_of_versions = version
+    print(version)
     while len(payload) > 6:
         new_sum_of_versions, new_payload = decode_packet(payload)
+        print(new_sum_of_versions)
         sum_of_versions += new_sum_of_versions
         payload = new_payload
 
