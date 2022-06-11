@@ -5,19 +5,19 @@ from typing import Tuple
 
 def main():
     hex = ""
-    with open("input.txt") as file:
+    with open("test9.txt") as file:
         for line in file:
             hex = line.strip()
             
     binary_str = hexToBinary(hex)
     print(decode_packet(binary_str))
 
-def find_literal_hex_value(hex: str) -> Tuple[int, str]:
+def find_literal_value(binary_str: str) -> Tuple[int, str]:
     binary_ret = ""
     i = 0
-    while i < len(hex) - 5:
+    while i <= len(binary_str) - 5:
         do_break = False
-        next_5 = hex[i:i + 5]
+        next_5 = binary_str[i:i + 5]
         if next_5[0] == "0":
             do_break = True
         binary_ret += next_5[1:]
@@ -27,17 +27,19 @@ def find_literal_hex_value(hex: str) -> Tuple[int, str]:
         if do_break:
             break
     
-    return binary_to_number(binary_ret), hex[i:]
+    return binary_to_number(binary_ret), binary_str[i:]
 
 def decode_packet(binary_str:str) -> Tuple[int, str]:
     version = determine_version(binary_str)
     type = determine_type(binary_str)
     payload = binary_str[6:]
     
+    if type == 4: # literal packet
+        literal_value, rest_of_binary = find_literal_value(payload)
+        print(literal_value)
+        return literal_value, rest_of_binary
+    
 
-    if type == 4:
-        literal_value, rest_of_hex = find_literal_hex_value(payload)
-        return version, rest_of_hex
 
     length_type = int(binary_str[6])
     payload = binary_str[7:]
@@ -52,13 +54,51 @@ def decode_packet(binary_str:str) -> Tuple[int, str]:
         number_of_subpackets = binary_to_number(payload[0:11])
         payload = payload[11:]
     
-    sum_of_versions = version
+    packet_values = 0
+    previous_value = None
     while len(payload) > 6:
-        new_sum_of_versions, new_payload = decode_packet(payload)
-        sum_of_versions += new_sum_of_versions
+        packet_value, new_payload = decode_packet(payload)
+        
+        if type == 0: # sum packet
+            if packet_values == 0:
+                packet_values = packet_value
+            else:
+                packet_values += packet_value
+        elif type == 1: # product packet
+            if packet_values == 0:
+                packet_values = packet_value
+            else:
+                packet_values *= packet_value
+        elif type == 2: # minimum packet
+            if packet_values == 0:
+                packet_values = packet_value
+            elif  packet_value < packet_values :
+                packet_values = packet_value
+        elif type == 3: # maximum packet
+            if packet_values == 0:
+                packet_values = packet_value
+            elif packet_value > packet_values:
+                packet_values = packet_value
+        # elif type == 4 is before this (literal packet)
+        elif type == 5: # greater than packet
+            if previous_value is None:
+                previous_value = packet_value
+            elif previous_value > packet_value:
+                packet_values = 1
+        elif type == 6: # less than packet
+            if previous_value is None:
+                previous_value = packet_value
+            elif previous_value < packet_value:
+                packet_values = 1
+        elif type == 7: # equal to packet
+            if previous_value is None:
+                previous_value = packet_value
+            elif previous_value == packet_value:
+                packet_values = 1
+
         payload = new_payload
 
-    return sum_of_versions, payload
+    return packet_values, payload
     
 
     
